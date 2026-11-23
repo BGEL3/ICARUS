@@ -14,8 +14,10 @@ local roomSpawn
 local function hasItem(id) for _,v in ipairs(itemsOwned) do if v==id then return true end end;return false end
 local function makeRewards() local pool={};for i,v in ipairs(itemPool) do pool[i]=v end;for i=#pool,2,-1 do local j=math.random(i);pool[i],pool[j]=pool[j],pool[i] end;rewardOptions={pool[1],pool[2],pool[3]};choice=1;mode='upgrade' end
 local function takeReward() local item=rewardOptions[choice];if not item then return end;item.apply();itemsOwned[#itemsOwned+1]=item.id;toastMsg='OBJETO ADQUIRIDO';if hasItem('ash') and hasItem('plume') then toastMsg='SINERGIA: CENIZA EN CADENA' elseif hasItem('pulse') and hasItem('plume') then toastMsg='SINERGIA: LLAMARADA DE PLUMAS' elseif hasItem('mirror') and hasItem('heart') then toastMsg='SINERGIA: CONTRAATAQUE INCANDESCENTE' end;toastTime=2.5;room=room+1;hp=math.min(maxhp,hp+1);roomSpawn();mode='play' end
-local colors={bg={.055,.063,.08},floor={.11,.12,.13},stone={.19,.19,.18},edge={.34,.31,.25},gold={.83,.62,.29},cream={.88,.83,.69},muted={.48,.46,.4},red={.78,.27,.22},teal={.29,.56,.51},shadow={.025,.03,.04}}
+local colors={bg={.035,.045,.075},floor={.12,.12,.16},stone={.19,.19,.24},edge={.34,.31,.38},gold={.96,.49,.2},cream={.9,.82,.7},muted={.48,.48,.58},red={.72,.24,.27},teal={.25,.67,.58},shadow={.025,.03,.06},violet={.12,.12,.2},moss={.18,.27,.2},portal={.17,.84,.52},ember={1,.3,.1}}
 local function rect(c,x,y,w,h) love.graphics.setColor(c); love.graphics.rectangle('fill',x,y,w,h) end
+local function poly(c,...) love.graphics.setColor(c);love.graphics.polygon('fill',...) end
+local function line(c,w,...) love.graphics.setColor(c);love.graphics.setLineWidth(w);love.graphics.line(...);love.graphics.setLineWidth(1) end
 local function text(s,x,y,size,c,font) love.graphics.setColor(c or colors.cream); love.graphics.setFont(font or love.graphics.newFont(size)); love.graphics.print(s,x,y) end
 local function center(s,y,size,c,font) local f=font or love.graphics.newFont(size); love.graphics.setFont(f); love.graphics.setColor(c or colors.cream); love.graphics.printf(s,0,y,W,'center') end
 roomSpawn=function()
@@ -54,20 +56,50 @@ function love.update(dt)
  for i=#particles,1,-1 do local p=particles[i];p.x=p.x+p.vx*dt;p.y=p.y+p.vy*dt;p.life=p.life-dt;if p.life<=0 then table.remove(particles,i) end end
  if #enemies==0 then makeRewards();if room%3==0 then hp=math.min(maxhp,hp+1) end end
 end
+local function drawTorch(x,y)
+ love.graphics.setColor(colors.ember[1],colors.ember[2],colors.ember[3],.10);love.graphics.circle('fill',x,y,31)
+ love.graphics.setColor(colors.gold[1],colors.gold[2],colors.gold[3],.16);love.graphics.circle('fill',x,y,18)
+ rect({.24,.22,.23},x-9,y+3,18,8);rect({.42,.35,.28},x-7,y,14,4);poly(colors.ember,x-4,y,x,y-10,x+3,y-2,x+6,y-8,x+6,y+1);poly(colors.gold,x-2,y,x,y-6,x+2,y)
+end
+local function drawColumn(x,y)
+ rect(colors.shadow,x-15,y+19,30,7);rect(colors.edge,x-14,y+12,28,8);rect({.24,.23,.28},x-10,y-15,20,27);rect({.34,.31,.34},x-13,y-18,26,5);rect({.25,.24,.28},x-12,y-15,4,26);rect({.25,.24,.28},x+8,y-15,4,26);rect(colors.edge,x-15,y+10,30,5);rect(colors.edge,x-17,y-22,34,5);rect({.42,.34,.3},x-13,y-24,26,3)
+end
 local function drawRoom()
- rect(colors.bg,0,0,W,H); for x=16,W-16,32 do rect({.09,.095,.1},x,68,1,H-108) end
- for y=92,H-32,32 do rect({.09,.095,.1},16,y,W-32,1) end
- rect(colors.edge,18,70,W-36,2);rect(colors.edge,18,H-30,W-36,2);rect(colors.edge,18,70,2,H-100);rect(colors.edge,W-20,70,2,H-100)
- for i=1,8 do local yy=85+i*70;rect({.14,.135,.12},18,yy,W-36,2);rect(colors.gold,18,yy,6,2);rect(colors.gold,W-24,yy,6,2) end
- -- stairs and central shaft motif
- rect({.08,.085,.09},W/2-27,90,54,H-120);for y=100,H-50,20 do rect({.15,.145,.13},W/2-30,y,60,2) end
- rect({.25,.22,.16},W/2-10,H-92,20,8);rect({.83,.61,.27},W/2-2,H-90,4,5)
+ rect(colors.bg,0,0,W,H);poly(colors.violet,0,70,88,70,120,H-30,0,H-30);poly({.075,.08,.13},W,70,W-88,70,W-120,H-30,W,H-30)
+ -- Piso de losas en rombos, con perspectiva de cámara elevada.
+ poly({.115,.12,.16},18,78,W-18,78,W-18,H-30,18,H-30)
+ for row=0,27 do local cy=84+row*23;local off=row%2==0 and 0 or 24
+  for col=-1,10 do local cx=off+col*48;local shade=((row*7+col*3)%5)*.008
+   poly({.14+shade,.14+shade,.18+shade},cx,cy-12,cx+24,cy,cx,cy+12,cx-24,cy)
+   line({.27,.25,.29},1,cx,cy-12,cx+24,cy,cx,cy+12,cx-24,cy,cx,cy-12)
+  end
+ end
+ -- Borde de piedra y ruinas laterales.
+ rect(colors.edge,14,75,W-28,7);rect({.09,.09,.14},14,82,8,H-113);rect({.09,.09,.14},W-22,82,8,H-113);rect(colors.edge,14,H-34,W-28,6)
+ for i=0,6 do local yy=112+i*86;drawColumn(27,yy);drawColumn(W-27,yy);if i%2==0 then drawTorch(50,yy+23);drawTorch(W-50,yy+23) end end
+ -- Portal verde al final de la cámara y escalinata central.
+ love.graphics.setColor(colors.portal[1],colors.portal[2],colors.portal[3],.08);love.graphics.circle('fill',W/2,96,55)
+ rect({.16,.17,.18},W/2-36,78,72,54);rect({.35,.31,.29},W/2-31,80,5,48);rect({.35,.31,.29},W/2+26,80,5,48);rect({.26,.24,.25},W/2-36,78,72,5)
+ love.graphics.setColor(colors.portal[1],colors.portal[2],colors.portal[3],.27);love.graphics.ellipse('fill',W/2,104,21,26);love.graphics.setColor(colors.portal);love.graphics.ellipse('line',W/2,104,21,26);line({.5,.9,.62},2,W/2-12,122,W/2+12,122)
+ for i=1,4 do local y=H-101+i*8;rect({.24,.22,.23},W/2-22-i*5,y,44+i*10,5);rect(colors.edge,W/2-22-i*5,y,44+i*10,2) end
+ -- Medallón solar grabado en las losas.
+ love.graphics.setColor(colors.gold[1],colors.gold[2],colors.gold[3],.18);love.graphics.circle('line',W/2,H/2+5,43);love.graphics.circle('line',W/2,H/2+5,32);for i=0,7 do local a=i*math.pi/4;line({.57,.34,.22},2,W/2+math.cos(a)*34,H/2+5+math.sin(a)*34,W/2+math.cos(a)*42,H/2+5+math.sin(a)*42) end
 end
 local function drawActor(x,y,kind)
- if kind=='player' then rect(colors.shadow,x-9,y+9,18,4);rect(colors.cream,x-6,y-9,12,18);rect(colors.teal,x-7,y-3,14,8);rect(colors.gold,x-4,y-12,8,4);rect(colors.shadow,x-3,y-5,2,2);rect(colors.shadow,x+2,y-5,2,2)
- elseif kind=='boss' then rect(colors.shadow,x-24,y+20,48,8);rect({.44,.25,.18},x-22,y-20,44,40);rect(colors.red,x-17,y-27,34,12);rect(colors.gold,x-16,y-12,32,6);rect(colors.cream,x-12,y-2,7,4);rect(colors.cream,x+5,y-2,7,4);rect(colors.gold,x-28,y-30,8,18);rect(colors.gold,x+20,y-30,8,18)
- elseif kind=='brute' then rect(colors.shadow,x-13,y+11,26,5);rect({.4,.3,.25},x-11,y-12,22,24);rect(colors.red,x-9,y-17,18,8);rect(colors.gold,x-7,y-2,4,3);rect(colors.gold,x+3,y-2,4,3)
- else rect(colors.shadow,x-10,y+9,20,4);rect({.34,.41,.39},x-7,y-10,14,20);rect(colors.teal,x-8,y-13,16,7);rect(colors.gold,x-4,y-4,3,3);rect(colors.gold,x+2,y-4,3,3) end
+ rect(colors.shadow,x-14,y+13,28,6)
+ if kind=='player' then
+  -- Ícaro: túnica coral, cinturón dorado y alas de pluma claras.
+  poly({.72,.65,.54},x-7,y-5,x-22,y-17,x-25,y-10,x-11,y+2);poly(colors.cream,x-8,y-7,x-20,y-21,x-17,y-11,x-10,y+1)
+  poly({.72,.65,.54},x+7,y-5,x+22,y-17,x+25,y-10,x+11,y+2);poly(colors.cream,x+8,y-7,x+20,y-21,x+17,y-11,x+10,y+1)
+  poly(colors.red,x-7,y-7,x+7,y-7,x+9,y+9,x-8,y+9);rect(colors.gold,x-8,y+1,16,3);rect({.69,.38,.25},x-5,y-12,10,7);rect(colors.gold,x-5,y-15,10,4);rect({.16,.12,.14},x-3,y-9,2,2);rect({.16,.12,.14},x+2,y-9,2,2);rect({.68,.44,.28},x-6,y+9,4,6);rect({.68,.44,.28},x+2,y+9,4,6);rect(colors.cream,x-6,y+14,6,2);rect(colors.cream,x+1,y+14,6,2)
+ elseif kind=='boss' then
+  -- Guardián minotauro provisional: masa de piedra volcánica, cuernos y brasa.
+  poly({.31,.20,.19},x-24,y-17,x-18,y-27,x-8,y-21,x+8,y-21,x+18,y-27,x+24,y-17,x+22,y+14,x-22,y+14);poly({.48,.27,.19},x-16,y-17,x+16,y-17,x+18,y+14,x-18,y+14);poly(colors.edge,x-18,y-16,x-30,y-31,x-27,y-12,x-20,y-8);poly(colors.edge,x+18,y-16,x+30,y-31,x+27,y-12,x+20,y-8);rect(colors.ember,x-12,y-5,7,3);rect(colors.ember,x+5,y-5,7,3);rect({.14,.1,.12},x-7,y+4,14,5);rect(colors.gold,x-3,y+4,6,2);rect({.21,.17,.19},x-23,y+11,46,9);rect(colors.red,x-17,y+16,12,7);rect(colors.red,x+5,y+16,12,7)
+ elseif kind=='brute' then
+  poly({.33,.24,.23},x-16,y-12,x-11,y-19,x+11,y-19,x+16,y-12,x+14,y+12,x-14,y+12);rect({.55,.28,.22},x-11,y-15,22,8);rect(colors.gold,x-9,y-3,5,3);rect(colors.gold,x+4,y-3,5,3);rect({.24,.2,.2},x-17,y+6,34,9)
+ else
+  poly({.24,.31,.36},x-12,y-12,x-8,y-17,x+8,y-17,x+12,y-12,x+9,y+11,x-9,y+11);poly({.35,.25,.38},x-8,y-16,x,y-21,x+8,y-16,x+10,y-8,x-10,y-8);rect(colors.gold,x-7,y-4,4,3);rect(colors.gold,x+3,y-4,4,3);poly({.22,.58,.53},x-15,y-4,x-21,y-14,x-17,y-7,x-12,y+2);poly({.22,.58,.53},x+15,y-4,x+21,y-14,x+17,y-7,x+12,y+2)
+ end
 end
 function love.draw()
  local sx,sy=love.graphics.getDimensions();love.graphics.push();love.graphics.scale(sx/W,sy/H);love.graphics.translate(math.random(-shake,shake),math.random(-shake,shake));drawRoom()

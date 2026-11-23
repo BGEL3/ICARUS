@@ -31,9 +31,9 @@ Todas las mecánicas base están disponibles al comenzar: plumas, llamarada, aut
 
 Objetos actuales: Plumas de Asclepio, Corazón de Brasa, Hoguera Solar, Ceniza Hambrienta, Pulso de Hestia y Espejo de Atenea.
 
-## Dirección visual de referencia
+## Dirección visual
 
-Las referencias compartidas apuntan a ruinas griegas en perspectiva isométrica, piedra oscura azul-violeta, iluminación cálida naranja de antorchas y un portal verde como punto de contraste. Mantener siluetas de personajes y enemigos legibles sobre un suelo con mosaicos. El arte pixelado final se integrará cuando lleguen los sprites de referencia del equipo.
+Las referencias compartidas marcan ruinas griegas elevadas sobre las nubes: piedra oscura azul-violeta, suelo de losas y mosaicos, columnas rotas, antorchas naranjas y un portal verde como punto de contraste. La versión actual traduce esa dirección con formas geométricas temporales y siluetas de alto contraste, incluyendo las alas de Ícaro y un guardián cornudo. No son los sprites finales; se reemplazarán cuando el equipo comparta su pixel art.
 
 ## Pendiente
 

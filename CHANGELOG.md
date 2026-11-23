@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 2026-11-23 — Primera traducción visual de las referencias
+
+- Se reemplazó la cuadrícula plana por un piso de losas en rombos, ruinas laterales, columnas rotas, antorchas cálidas, medallón solar y portal verde.
+- Se cambiaron las siluetas provisionales por formas de mayor contraste: Ícaro con alas claras y túnica coral, sombras enemigas y un guardián cornudo.
+- Se mantuvo todo dibujado temporalmente en código para poder sustituirlo por los sprites pixel art del equipo.
+
 ## 2026-11-23 — Prototipo inicial de hackathon
 
 - Se creó el juego base en LÖVE 2D, ambientado en una torre inspirada en el mito de Ícaro.
