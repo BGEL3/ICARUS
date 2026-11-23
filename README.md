@@ -1,34 +1,42 @@
 # ICARUS — Torre del Sol
 
-Prototipo de hackathon: roguelike de acción cenital en una torre inspirada en el mito de Ícaro. Combate rápido, cámaras de enemigos y bendiciones entre ascensos.
+Prototipo roguelike de acción para LÖVE 11.x. Ícaro asciende por cámaras de una torre griega mientras combina plumas ígneas, hechizos y objetos pasivos.
 
-## Jugar la vista previa
+## Ejecutar
 
-Abre `index.html` en un navegador para ver la dirección visual y probar la interacción de bendición.
-
-## Ejecutar el juego LÖVE
-
-Instala [LÖVE 11.x](https://love2d.org/) y, desde este directorio, ejecuta:
+Instala [LÖVE 11.x](https://love2d.org/) y ejecuta desde esta carpeta:
 
 ```sh
 love .
 ```
 
+`index.html` es la demo de navegador para revisar el bucle sin instalar LÖVE.
+
 ## Controles
 
-- WASD: moverse
-- J: lanza una pluma ígnea en la dirección WASD o hacia el objetivo fijado
-- K: llamarada en área con enfriamiento
-- I: incinerarse, pagar 1 vida y duplicar el daño de fuego durante 6 segundos (12 s de enfriamiento)
-- Espacio o Shift: esquivar
-- L: fijar el enemigo más cercano; vuelve a pulsar para rotar al siguiente. El objetivo queda marcado y la pluma ígnea se dirige hacia él. Sin fijar objetivo, WASD controla la dirección del ataque.
-- En la bendición: J/K cambian la elección; L o Espacio confirma
-- Escape: volver al título
+- **WASD:** moverse y orientar las plumas si no hay un objetivo fijado.
+- **J:** lanzar plumas ígneas; aplican quemadura.
+- **K:** llamarada de área; consume enfriamiento y puede detonar quemaduras con el objeto Pulso de Hestia.
+- **I:** pagar 1 vida para duplicar el daño de fuego por 6 segundos; vuelve a estar disponible tras 12 segundos.
+- **H:** parry breve. Si desvía un proyectil, daña y quema a quien lo lanzó y reduce la carga de K.
+- **O:** activar/desactivar autoenfoque; apunta al enemigo más cercano si está activo.
+- **L:** fijar al siguiente enemigo por cercanía. El objetivo se señala con un punto; L vuelve a rotar.
+- **Espacio o Shift:** esquivar.
+- **En recompensa:** J/K cambian el objeto ofrecido; L o Espacio lo elige.
+- **Escape:** volver al título.
 
-La demo muestra desde el inicio el ciclo de pluma ígnea, llamarada y auto-incineración; las bendiciones pueden cambiar su daño, duración o recarga.
+## Bucle de la demo (10–12 minutos)
 
-## Bucle actual
+Todas las mecánicas base están disponibles al comenzar: plumas, llamarada, auto-incineración, esquiva, autoenfoque y parry. Cada cámara limpia ofrece tres objetos pasivos de un pool de seis. Los objetos modifican las habilidades y algunas parejas activan sinergias explícitas. Cada tercer ascenso aparece el jefe de prueba.
 
-Limpia cada cámara. Las plumas ígneas aplican quemadura. K lanza una llamarada con cooldown; I consume vida para duplicar el daño de fuego durante 6 segundos. Cada tercera cámara aparece un jefe de prueba; al vencerlo, elige una bendición relacionada con plumas, auto-incineración o recarga. La partida termina al perder toda la vida y puedes ascender de nuevo.
+Objetos actuales: Plumas de Asclepio, Corazón de Brasa, Hoguera Solar, Ceniza Hambrienta, Pulso de Hestia y Espejo de Atenea.
 
-Los nombres de Minotauro, Helios y Apolo quedan como próximos jefes con identidad propia; el jefe actual es un guardián placeholder para validar primero sensación, ritmo y legibilidad.
+## Dirección visual de referencia
+
+Las referencias compartidas apuntan a ruinas griegas en perspectiva isométrica, piedra oscura azul-violeta, iluminación cálida naranja de antorchas y un portal verde como punto de contraste. Mantener siluetas de personajes y enemigos legibles sobre un suelo con mosaicos. El arte pixelado final se integrará cuando lleguen los sprites de referencia del equipo.
+
+## Pendiente
+
+- Sustituir el guardián placeholder por Minotauro, Helios o Apolo.
+- Integrar el pixel art definitivo y adaptar la cámara/escenario a esos sprites.
+- Ampliar los pools de objetos, salas y sinergias después de validar la demo corta.

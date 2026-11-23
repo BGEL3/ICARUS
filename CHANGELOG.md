@@ -19,3 +19,15 @@
 - Explorar más adelante una rama de ataque de plumas con comportamientos alternativos.
 - Cambiar el jefe placeholder por encuentros propios para Minotauro, Helios o Apolo.
 - Revisar la dirección visual cuando el equipo comparta referencias de arte.
+
+
+## 2026-11-23 — Habilidades base, objetos pasivos y parry
+
+- Se decidió conservar un kit base visible desde el inicio: plumas ígneas (J), llamarada (K), auto-incineración (I) y esquiva (Espacio/Shift). Los objetos pasivos modifican estas reglas en vez de reemplazar el kit.
+- Se añadió autoenfoque con O, opción para fijar/cambiar objetivo con L y un punto marcador sobre el enemigo seleccionado.
+- Se añadió parry con H: durante una ventana breve, desvía proyectiles, quema/daña al atacante y reduce el enfriamiento de K. Espejo de Atenea amplía la ventana.
+- Las recompensas pasan a ser tres opciones de un pool de seis objetos pasivos. Se incorporaron sinergias entre plumas, quemadura, llamarada, auto-incineración y parry.
+- Se organizaron las mecánicas para enseñar el ciclo principal en una demo de 10–12 minutos, sin esperar desbloqueos tardíos.
+- Se añadió al README la dirección visual extraída de las referencias: ruinas griegas isométricas, piedra azul-violeta, fuego naranja, portal verde y siluetas legibles. Los sprites finales se integrarán cuando el equipo los comparta.
+
+- Se confirmó que `main.lua` en Lua/LÖVE es la implementación principal; `index.html` se mantiene únicamente como vista rápida de apoyo.
