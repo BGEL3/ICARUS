@@ -1,39 +1,26 @@
 # Registro de cambios
 
-## 2026-11-23 — Primera traducción visual de las referencias
+## Proyecto base importado
 
-- Se reemplazó la cuadrícula plana por un piso de losas en rombos, ruinas laterales, columnas rotas, antorchas cálidas, medallón solar y portal verde.
-- Se cambiaron las siluetas provisionales por formas de mayor contraste: Ícaro con alas claras y túnica coral, sombras enemigas y un guardián cornudo.
-- Se mantuvo todo dibujado temporalmente en código para poder sustituirlo por los sprites pixel art del equipo.
+- Se eligió `ICARUS_LOVE2D_v0_2 (1).zip` como nueva base de trabajo.
+- Se conservaron su distribución LÖVE 2D/Lua, módulos `src/`, configuración `conf.lua`, sprites, atlas de baldosas y referencias.
+- Se retiró del repositorio `index.html`, una vista HTML antigua que no representaba la ejecución real en LÖVE.
 
-## 2026-11-23 — Prototipo inicial de hackathon
+## Mecánicas añadidas sobre v0.2
 
-- Se creó el juego base en LÖVE 2D, ambientado en una torre inspirada en el mito de Ícaro.
-- Se añadieron salas de combate, movimiento en ocho direcciones, enemigos que persiguen y atacan, vida, esquiva y un jefe de prueba cada tres salas.
-- Se agregó una vista previa interactiva para navegador, de modo que el combate pueda probarse sin instalar LÖVE.
-- Se incorporaron recompensas entre salas con bendiciones seleccionables.
-- Se pasó a controles solo de teclado: WASD para movimiento, J/K para acciones y Espacio o Shift para esquivar.
-- Se agregaron límites de cámara para jugador y enemigos y la opción de fijar/rotar objetivo con L.
-- Se aumentó la vida de enemigos y jefe y se añadieron barras para hacer los combates más legibles.
-- Se enfocó la identidad de combate en fuego: plumas ígneas como ataque básico, quemadura al impactar, llamarada en área y auto-incineración que consume vida para duplicar temporalmente el daño de fuego.
-- Se ajustó el apuntado: sin objetivo fijado, WASD conserva la dirección del ataque; con objetivo fijado, el ataque se orienta hacia el enemigo marcado.
-- Se definieron bendiciones iniciales que mejoran las plumas, la auto-incineración o la recarga de la llamarada.
-- Se documentaron controles, bucle actual y próximos jefes placeholder en el README.
+- Autofoco con O, activado por defecto. L fija y rota por cercanía; el autoenfoque respeta la fijación. Un punto sobre el enemigo muestra el objetivo.
+- Parry H con ventana de 0,20 s y recarga de 1,35 s. Un impacto bloqueado contraataca, aplica quemadura y reduce 1 s del cooldown de K.
+- Espejo de Atenea extiende el parry a 0,30 s, baja su recarga a 0,95 s y aumenta el contraataque.
+- La esquiva ahora avanza usando la última dirección aunque no se mantenga WASD.
+- Se añadieron efectos concretos y descripciones coherentes para el pool de reliquias, con quince elecciones únicas posibles por intento.
+- Se implementaron tres sinergias: Ceniza en cadena, Llamarada de plumas y Contraataque incandescente.
+- La dificultad escala en los tres pisos: enemigos con más vida/velocidad, proyectiles más dañinos y guardianes con ataques anticipados de varios patrones y escolta.
+- K ahora detona desde el inicio a los enemigos previamente quemados por J, con daño extra según la quemadura restante. Pulso de Hestia refuerza esa interacción y, junto a Plumas de Asclepio, propaga el fuego.
+- Se ampliaron tutorial, HUD y controles para mostrar autofoco, parry y cooldowns.
+- Se reescribieron README, DESIGN y `RETOMAR.md` con controles, reglas, objetos, estructura y requisitos pendientes.
 
-## Decisiones de diseño pendientes
+## Pendiente de validación
 
-- Explorar más adelante una rama de ataque de plumas con comportamientos alternativos.
-- Cambiar el jefe placeholder por encuentros propios para Minotauro, Helios o Apolo.
-- Revisar la dirección visual cuando el equipo comparta referencias de arte.
-
-
-## 2026-11-23 — Habilidades base, objetos pasivos y parry
-
-- Se decidió conservar un kit base visible desde el inicio: plumas ígneas (J), llamarada (K), auto-incineración (I) y esquiva (Espacio/Shift). Los objetos pasivos modifican estas reglas en vez de reemplazar el kit.
-- Se añadió autoenfoque con O, opción para fijar/cambiar objetivo con L y un punto marcador sobre el enemigo seleccionado.
-- Se añadió parry con H: durante una ventana breve, desvía proyectiles, quema/daña al atacante y reduce el enfriamiento de K. Espejo de Atenea amplía la ventana.
-- Las recompensas pasan a ser tres opciones de un pool de seis objetos pasivos. Se incorporaron sinergias entre plumas, quemadura, llamarada, auto-incineración y parry.
-- Se organizaron las mecánicas para enseñar el ciclo principal en una demo de 10–12 minutos, sin esperar desbloqueos tardíos.
-- Se añadió al README la dirección visual extraída de las referencias: ruinas griegas isométricas, piedra azul-violeta, fuego naranja, portal verde y siluetas legibles. Los sprites finales se integrarán cuando el equipo los comparta.
-
-- Se confirmó que `main.lua` en Lua/LÖVE es la implementación principal; `index.html` se mantiene únicamente como vista rápida de apoyo.
+- Este entorno no tiene `love`, `lua` ni `texlua` disponibles, así que falta abrir el proyecto con LÖVE 11.x y probar el recorrido real.
+- Revisar que las animaciones, el marcador de objetivo, la ventana de parry y las sinergias se lean bien en pantalla.
+- Confirmar los créditos y licencias de los recursos incluidos en el ZIP.
