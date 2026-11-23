@@ -1,31 +1,30 @@
-# Informe Supervisor — v0.2
+# Revisión técnica v0.2
 
-## Verificado por revisión estática y pruebas automatizadas
-- Motor de destino LÖVE2D 11.x, fuente Lua.
-- Entrada por teclado; las acciones de ratón no se usan.
-- `Rooms.total=6`, pisos calculados cada 2 salas.
-- Vida inicial 100 y recuperación de completo +5.
-- J pluma, K llamarada, I autoincineración, L lock-on y ESPACIO/SHIFT dash.
-- Selección de bendición mediante J/K + L/Espacio.
-- Referencias gráficas almacenadas; atlas y sprites provisionales PNG reales integrados en renderizado.
-- Tutorial inicial con duración 5 s y retrato; frase «QUEDA UNA PURA SALA», grabado CODEX y número 23.
+## Integrado
 
-## Pendiente de aprobación
-- No se ha ejecutado una sesión visual real del juego en la aplicación LÖVE2D en esta revisión.
-- El render puede necesitar ajustes de tamaño, legibilidad y orden de capas.
-- No se considera entregado arte profesional de ocho direcciones y múltiples estados: son placeholders.
-- Colisiones de columnas, muros, portales y arquitectura isométrica detallada no están implementadas (únicamente límites del área).
-- UI de stamina e inventario rápido no implementada: su existencia fue propuesta en el documento pero no confirmada como mecánica.
-- Requiere pruebas reales de rendimiento, balance y bugs por el propietario.
+- Imagen de sala pixel art conectada al render de juego; fondo de menú limpio con logo y botones de piedra en hojas separadas.
+- Hojas de correr e idle de Ícaro con cuatro filas isométricas; ataque de viento con una hoja por cada eje.
+- Reproducción con quads a 12 FPS, independiente del tiempo de actualización del motor.
+- Render ordenado por profundidad de Ícaro, enemigos y Bodoque.
+- Límite transitable romboidal, obstáculos, puerta y NPC definidos en `assets/maps/arena/map.lua` y resueltos desde `src/collision/arena.lua`.
+- Barra de vida, resistencia, monedas, ranuras de reliquias, carga solar, inventario dinámico y diálogo progresivo.
 
-## Pruebas ejecutadas
-- Compilación de los siete archivos Lua con `loadfile()` mediante `texlua`: OK.
-- Simulación de estados de combate: pluma, llamarada, autoincineración, fijación y esquiva: OK.
-- Recorrido de seis cámaras con elección de bendiciones y pantalla de victoria: OK.
-- Archivo ZIP: comprobación de integridad: OK.
+## Comprobaciones realizadas
 
-**Resultado:** integración aprobada a nivel sintáctico y de lógica automatizada. Aprobación visual y de experiencia condicionada a prueba real en LÖVE2D y sustitución del arte provisional.
+- Se revisaron visualmente las hojas y recortes suministrados, la sala principal, el fondo del menú y el marco de diálogo.
+- Los PNG del jugador están organizados por cuadros de tamaño fijo; los cuatro ataques tienen imagen propia por dirección.
+- El mapa de colisiones está separado de la imagen decorativa.
+- LÖVE 11.5 cargó el proyecto, las imágenes y los módulos; se renderizaron y revisaron capturas del menú, la sala y el diálogo.
+- Smoke check lógico: animaciones a 12 FPS, empuje contra obstáculos, disparo/ataque y aparición progresiva del diálogo.
 
-## Estado de la rama tras integrar el ZIP
+## Límites pendientes
 
-El bloque anterior describe la revisión que acompañaba al ZIP v0.2. La rama actual añadió autofoco, rotación/fijación de objetivo, parry, una esquiva direccional sin mantener movimiento, y sinergias de reliquias. Estos cambios todavía requieren una ejecución real en LÖVE para validación visual y de combate. En el entorno actual no se encuentran los ejecutables `love`, `lua` ni `texlua` en PATH.
+- No se hizo una partida manual completa para balancear combate, cámara y recompensa.
+- Las criaturas/jefes son conceptos estáticos. No se ha aprobado su lectura a escala de combate.
+- El fondo de la sala está compuesto en una única imagen; los sprites no se pueden ocluir con columnas individuales todavía.
+- La colisión actual usa un rombo y círculos de obstáculos, no polígonos específicos de cada muro o desnivel.
+- Las cuatro filas de Ícaro se construyeron con dos vistas base y filas reflejadas; una pasada de pixel art manual puede dar a las cuatro orientaciones siluetas más distintas.
+
+## Veredicto
+
+**Prototipo integrado y renderizado en LÖVE 11.5.** Se recomienda una sesión de juego manual para ajustar el balance y expandir la oclusión y las animaciones.

@@ -1,142 +1,234 @@
-local Rooms=require('src.rooms')
+local Animation=require('src.animation')
+local Iso=require('src.isometric')
+local Map=require('assets.maps.arena.map')
 local Render={}
-local cache={}
-local function color(c,a) love.graphics.setColor(c[1],c[2],c[3],a or 1) end
-local function iso(x,y) return (x-y)*.72,(x+y)*.40 end
-Render.iso=iso
+
+local colors={bg={.055,.038,.11},gold={1,.68,.28},orange={1,.38,.13},pale={.94,.86,.74},red={.85,.20,.27}}
+local function C(t,a) love.graphics.setColor(t[1],t[2],t[3],a or 1) end
+local function image(path)
+  local ok,result=pcall(love.graphics.newImage,path)
+  if not ok then return nil end
+  result:setFilter('nearest','nearest')
+  return result
+end
+local function loadAnimation(path,columns,rows,loop,width,height)
+  local source=image(path)
+  if not source then return nil end
+  return Animation.new(source,columns,rows,12,loop,width,height)
+end
+
 function Render.load()
- local list={'player','hoplite','harpy','brute','boss','floor_tiles','completo','skull_23'}
- for _,name in ipairs(list) do
-  local path='assets/sprites/'..name..'.png'
-  if love.filesystem.getInfo(path) then
-   local im=love.graphics.newImage(path);im:setFilter('nearest','nearest');cache[name]=im
+  Render.room=image('assets/environments/arena/main_room.png')
+  local player='assets/characters/player/icarus/'
+  Render.run=loadAnimation(player..'run.png',8,4,true,320,320)
+  Render.idle=loadAnimation(player..'idle.png',6,4,true,320,320)
+  Render.attacks={}
+  for _,direction in ipairs({'north','east','south','west'}) do
+    Render.attacks[direction]=loadAnimation(player..'wind_attack_'..direction..'.png',4,2,false,384,384)
   end
- end
- if cache.floor_tiles then
-  cache.tiles={}
-  for i=0,3 do cache.tiles[i+1]=love.graphics.newQuad(i*64,0,64,32,256,32) end
- end
- for _,name in ipairs({'player','hoplite','harpy','brute','boss'}) do
-  local im=cache[name];if im then
-   cache[name..'_quads']={}
-   for row=0,3 do for d=0,7 do cache[name..'_quads'][row*8+d+1]=love.graphics.newQuad(d*48,row*56,48,56,384,224) end end
+  Render.enemyImages={
+    shade=image('assets/characters/concepts/ash_wraith.png'),
+    archer=image('assets/characters/concepts/crimson_archer.png'),
+    harpy=image('assets/characters/concepts/harpy_queen.png'),
+    sentinel=image('assets/characters/concepts/sun_sentinel.png'),
+  }
+  Render.bodoque=loadAnimation('assets/characters/npc/bodoque/poses.png',3,2,true,512,512)
+  Render.bodoquePanel=image('assets/ui/dialogue/bodoque_dialogue_box.png')
+  Render.menuTitle=loadAnimation('assets/ui/menu/spritesheet-transparent.png',3,2,true,512,384)
+  Render.menuPlay=loadAnimation('assets/ui/menu/play.png',3,2,true,512,384)
+  Render.menuSettings=loadAnimation('assets/ui/menu/settings.png',3,2,true,512,384)
+  Render.tiles=image('assets/environments/tiles/floor_tiles.png')
+  Render.decorations=image('assets/environments/decorations/props.png')
+  Render.relicSheet=image('assets/effects/relics/relics_effects.png')
+end
+
+function Render.update(dt)
+  for _,animation in pairs({Render.run,Render.idle,Render.bodoque,Render.menuTitle,Render.menuPlay,Render.menuSettings}) do
+    if animation then animation:update(dt) end
   end
- end
 end
-local function quad(x,y,w,h)
- local a,b=iso(x,y);local c,d=iso(x+w,y);local e,f=iso(x+w,y+h);local g,k=iso(x,y+h)
- return {a,b,c,d,e,f,g,k}
-end
-local function prism(x,y,w,h,depth,tint)
- local lg=love.graphics;local p=quad(x,y,w,h)
- color(tint);lg.polygon('fill',p)
- lg.setColor(.08,.07,.12);lg.polygon('fill',{p[7],p[8],p[5],p[6],p[5],p[6]+depth,p[7],p[8]+depth})
- lg.setColor(.14,.12,.19);lg.polygon('fill',{p[3],p[4],p[5],p[6],p[5],p[6]+depth,p[3],p[4]+depth})
- lg.setColor(.46,.35,.44,.6);lg.setLineWidth(2);lg.polygon('line',p)
-end
-local function character(name,x,y,g,dir,opacity,scale)
- local im=cache[name];local lg=love.graphics
- if not im then return end
- local sx,sy=iso(x,y)
- lg.setColor(0,0,0,.37);lg.ellipse('fill',sx,sy+4,18,8)
- local frame=(math.floor(g.time*12)%4)
- local idx=frame*8+(dir or 0)+1
- lg.setColor(1,1,1,opacity or 1)
- lg.draw(im,cache[name..'_quads'][idx],sx,sy+11,0,scale or 1.12,scale or 1.12,24,51)
-end
-function Render.drawWorld(g,w,h)
- local lg=love.graphics;local scale=math.min(w/1320,h/820)
- lg.push();lg.translate(w/2,h*.54);lg.scale(scale,scale)
- local base=g.room.palette=='violet' and {.20,.16,.27} or g.room.palette=='slate' and {.16,.19,.25} or {.26,.15,.20}
- prism(-Rooms.w/2,-Rooms.h/2,Rooms.w,Rooms.h,95,base)
- -- Sharp 2:1 isometric pixel tiles, rendered with nearest-neighbour sampling.
- if cache.floor_tiles then
-  for ix=0,12 do for iy=0,7 do
-   local x=-Rooms.w/2+ix*84+42;local y=-Rooms.h/2+iy*84+42
-   local sx,sy=iso(x,y)
-   lg.setColor(1,1,1,.86);lg.draw(cache.floor_tiles,cache.tiles[((ix*3+iy*7)%4)+1],sx,sy,0,1.89,2.1,32,16)
-  end end
- end
- -- Engraved Codex word mark, dim and subject to isometric plane perspective.
- lg.push();local sx,sy=iso(-120,-55);lg.translate(sx,sy);lg.rotate(.48);lg.scale(1.85,.72)
- lg.setColor(.10,.075,.14,.50);lg.print('CODEX',2,3)
- lg.setColor(.68,.47,.43,.23);lg.print('CODEX',0,0)
- lg.pop()
- -- Skull with 23 pendant, on elevated plinth.
- prism(-445,-100,82,82,23,{.24,.21,.31})
- local skx,sky=iso(-403,-58)
- if cache.skull_23 then lg.setColor(1,1,1);lg.draw(cache.skull_23,skx-26,sky-81,0,1.15,1.15) end
- lg.setColor(.99,.71,.34);lg.print('23',skx-12,sky-37,0,.8,.8)
- -- Decorative corners and portal. Collision follows room limits, decorations are currently non-solid.
- for _,p in ipairs({{-475,-240},{397,-240},{-475,184},{397,184}}) do
-  prism(p[1],p[2],75,75,115,{.33,.26,.37})
-  local bx,by=iso(p[1]+37,p[2]+37)
-  lg.setColor(.99,.35,.08,.34);lg.circle('fill',bx,by-24,26)
-  lg.setColor(1,.49,.13);lg.circle('fill',bx,by-24,12)
-  lg.setColor(1,.74,.26);lg.circle('fill',bx,by-31,6)
- end
- local ex,ey=iso(0,-Rooms.h/2+53)
- lg.setColor(g.state=='clear' and 1 or .39,g.state=='clear' and .65 or .35,.17);lg.setLineWidth(7);lg.ellipse('line',ex,ey,48,23)
- for _,item in ipairs(g.food) do if not item.used then
-  local x,y=iso(item.x,item.y)
-  if cache.completo then lg.setColor(1,1,1);lg.draw(cache.completo,x,y-22+math.sin(g.time*3)*3,0,1.15,1.15,32,22) end
- end end
- -- Depth order by projected vertical axis.
- local actors={}
- for _,e in ipairs(g.enemies) do actors[#actors+1]={kind=e.kind,obj=e,sort=e.x+e.y} end
- actors[#actors+1]={kind='player',obj=g.player,sort=g.player.x+g.player.y}
- table.sort(actors,function(a,b) return a.sort<b.sort end)
- for _,a in ipairs(actors) do
-  local e=a.obj
-  if a.kind=='player' then
-   local direction=math.floor((math.atan2(e.faceY,e.faceX)+math.pi)*4/math.pi+.5)%8
-   character('player',e.x,e.y,g,direction,(e.invul>0 and math.floor(g.time*14)%2==0) and .5 or 1)
-   if e.incinerateTime>0 then
-    local x,y=iso(e.x,e.y);lg.setColor(1,.35,.08,.55);lg.circle('line',x,y-16,33+math.sin(g.time*12)*3)
-   end
-   if e.parryTime>0 then
-    local x,y=iso(e.x,e.y);local pulse=35+math.sin(g.time*40)*3
-    lg.setColor(.72,.9,1,.85);lg.setLineWidth(3);lg.circle('line',x,y-15,pulse);lg.setLineWidth(1)
-   end
-  else
-   character(a.kind,e.x,e.y,g,0,e.flash>0 and .52 or 1,a.kind=='boss' and 1.55 or a.kind=='brute' and 1.25 or 1.05)
-   local x,y=iso(e.x,e.y)
-   if e.windup and e.windup>0 then
-    local tx,ty=iso(e.x+e.aimX*490,e.y+e.aimY*490)
-    local alpha=.22+.38*(1-e.windup/(e.kind=='boss' and .48 or .38))
-    lg.setColor(1,.16,.12,alpha);lg.setLineWidth(e.kind=='boss' and 3 or 2)
-    lg.line(x,y-15,tx,ty-15);lg.setLineWidth(1)
-    lg.setColor(1,.28,.18,alpha);lg.circle('line',tx,ty-15,e.kind=='boss' and 10 or 6)
-   end
-   if e.burn>0 then
-    lg.setColor(1,.34,.08,.65);lg.setLineWidth(2);lg.circle('line',x,y-15,18+math.sin(g.time*18)*2);lg.setLineWidth(1)
-   end
-   lg.setColor(.08,.04,.12);lg.rectangle('fill',x-33,y-55,66,6)
-   lg.setColor(.93,.24,.25);lg.rectangle('fill',x-33,y-55,66*math.max(0,e.hp/e.maxHp),6)
-   if g.target==e then
-    -- Punto central para autoenfoque y fijación manual.
-    lg.setColor(1,.78,.24,.35);lg.circle('fill',x,y-16,8)
-    lg.setColor(1,.78,.24);lg.circle('fill',x,y-16,3)
-    if g.lock==e then lg.setLineWidth(1.5);lg.circle('line',x,y-16,11);lg.setLineWidth(1) end
-   end
-  end
- end
- for _,s in ipairs(g.shots) do
-  local x,y=iso(s.x,s.y)
-  lg.setColor(s.enemy and .91 or 1,s.enemy and .17 or .52,.12,.3);lg.circle('fill',x,y-15,s.r*2)
-  lg.setColor(s.enemy and 1 or 1,s.enemy and .34 or .85,.28);lg.circle('fill',x,y-15,s.r*.9)
- end
- for _,e in ipairs(g.effects) do
-  local x,y=iso(e.x,e.y);color(e.color,e.t/e.max*.72);lg.setLineWidth(3);lg.circle('line',x,y,e.size*(1-e.t/e.max)*1.1)
- end
- lg.pop()
-end
+
 function Render.background(w,h,t)
- love.graphics.clear(.045,.035,.08)
- local lg=love.graphics
- for i=1,10 do
-  lg.setColor(.20,.12,.28,.12)
-  lg.ellipse('fill',w*.5+math.cos(i*.8)*w*.6,h*.70+math.sin(i+t*.035)*h*.23,160,48)
- end
+  love.graphics.clear(colors.bg)
+  for i=1,12 do
+    local a=i*.9
+    love.graphics.setColor(.18,.11,.26,.1)
+    love.graphics.ellipse('fill',w*.5+math.cos(a)*w*.58,h*.67+math.sin(a*2+t*.035)*h*.22,190,60)
+  end
 end
+
+function Render.drawMenu(background,w,h,choice,t)
+  local lg=love.graphics
+  if background then
+    lg.setColor(1,1,1,1)
+    lg.draw(background,0,0,0,w/background:getWidth(),h/background:getHeight())
+  end
+  local scale=math.min(w/1280,h/720)
+  if Render.menuTitle then Render.menuTitle:draw(w*.5,h*.25,.72*scale,256,190,1) end
+  local buttonScale=.59*scale
+  if Render.menuPlay then
+    local y=h*.57+(choice==1 and -5 or 0)
+    lg.setColor(1,1,1,choice==1 and 1 or .78)
+    Render.menuPlay:draw(w*.5,y,buttonScale,256,192,1)
+  end
+  if Render.menuSettings then
+    local y=h*.77+(choice==2 and -5 or 0)
+    lg.setColor(1,1,1,choice==2 and 1 or .78)
+    Render.menuSettings:draw(w*.5,y,buttonScale,256,192,1)
+  end
+  lg.setColor(1,.86,.65,.9)
+  lg.printf('W / S o FLECHAS: seleccionar    ENTER: confirmar    F11: pantalla completa',
+    0,h-34,w,'center')
+end
+
+local function enemyImage(g,e)
+  if e.kind=='boss' then
+    if g.room.floor==1 then return Render.enemyImages.sentinel end
+    if g.room.floor==2 then return Render.enemyImages.harpy end
+    return Render.enemyImages.shade
+  end
+  if e.kind=='archer' then return Render.enemyImages.archer end
+  return Render.enemyImages.shade
+end
+
+local function drawPlayer(g,scale)
+  local p=g.player
+  local x,y=Iso.toScreen(p.x,p.y)
+  local direction=p.attackAnimTime>0 and p.attackDir or p.facing
+  local attack=Render.attacks[direction]
+  local blink=p.invul>0 and math.floor(g.elapsed*16)%2==0
+  love.graphics.setColor(1,1,1,blink and .78 or 1)
+  if attack and p.attackAnimTime>0 then
+    local elapsed=8/12-p.attackAnimTime
+    local frame=math.min(8,math.floor(math.max(0,elapsed)*12)+1)
+    attack:draw(x,y,.25*scale,192,352,1,frame)
+  else
+    local animation=p.moving and Render.run or Render.idle
+    if animation then
+      local rows={north=1,east=2,south=3,west=4}
+      animation:draw(x,y,.25*scale,160,292,rows[p.facing] or 1)
+    else
+      love.graphics.setColor(.95,.73,.36)
+      love.graphics.circle('fill',x,y-20,15)
+    end
+  end
+  love.graphics.setColor(1,1,1,1)
+end
+
+local function drawEnemy(g,e,scale)
+  local x,y=Iso.toScreen(e.x,e.y)
+  local sprite=enemyImage(g,e)
+  if sprite then
+    local height=e.kind=='boss' and .37 or .28
+    love.graphics.setColor(1,1,1,e.flash>0 and .75 or 1)
+    love.graphics.draw(sprite,x,y,0,height*scale,height*scale,256,458)
+  else
+    love.graphics.setColor(.38,.36,.51,1);love.graphics.circle('fill',x,y-17,e.r)
+  end
+  love.graphics.setColor(.06,.035,.05,.92)
+  love.graphics.rectangle('fill',x-25,y-72,50,6)
+  love.graphics.setColor(.9,.2,.24,1)
+  love.graphics.rectangle('fill',x-25,y-72,50*math.max(0,e.hp/e.maxHp),6)
+end
+
+local function drawBodoque(g,scale)
+  local npc=Map.bodoque
+  local x,y=Iso.toScreen(npc.x,npc.y)
+  if Render.bodoque then
+    local row=g.bodoqueTalking and 1 or 1
+    local column=g.bodoqueTalking and 2 or 1
+    Render.bodoque:draw(x,y,.18*scale,256,466,row,(row-1)*3+column)
+  end
+  if g:nearBodoque() then
+    love.graphics.setColor(.05,.035,.08,.86)
+    love.graphics.rectangle('fill',x-61,y-115,122,22,3)
+    love.graphics.setColor(1,.78,.43,1)
+    love.graphics.printf('E  HABLAR',x-59,y-111,118,'center')
+  end
+end
+
+function Render.drawWorld(g,w,h)
+  local lg=love.graphics
+  if Render.room then
+    lg.setColor(1,1,1,1)
+    lg.draw(Render.room,0,0,0,w/Render.room:getWidth(),h/Render.room:getHeight())
+    if g.room.floor==2 then
+      lg.setColor(.12,.22,.28,.10);lg.rectangle('fill',0,0,w,h)
+    elseif g.room.floor==3 then
+      lg.setColor(1,.68,.39,.055);lg.rectangle('fill',0,0,w,h)
+    end
+  end
+  local scale=math.min(w/1280,h/720)
+  lg.push();lg.translate(w/2,h*.49);lg.scale(scale,scale)
+
+  -- The portal is a world object; the static architecture remains in the room PNG.
+  local gate=Map.exits[1]
+  local gx,gy=Iso.toScreen(gate.x,gate.y)
+  lg.setColor(.12,.82,.72,g.state=='clear' and .34 or .16)
+  lg.ellipse('fill',gx,gy,55,19)
+  lg.setColor(.34,1,.84,g.state=='clear' and .8 or .42)
+  lg.setLineWidth(3);lg.ellipse('line',gx,gy,47,16)
+
+  local sprites={}
+  for _,e in ipairs(g.enemies) do sprites[#sprites+1]={obj=e,kind='enemy',depth=Iso.depth(e.x,e.y)} end
+  sprites[#sprites+1]={obj=g.player,kind='player',depth=Iso.depth(g.player.x,g.player.y)}
+  local npc=Map.bodoque
+  sprites[#sprites+1]={obj=npc,kind='bodoque',depth=Iso.depth(npc.x,npc.y)}
+  table.sort(sprites,function(a,b) return a.depth<b.depth end)
+  for _,sprite in ipairs(sprites) do
+    if sprite.kind=='enemy' then drawEnemy(g,sprite.obj,scale)
+    elseif sprite.kind=='player' then drawPlayer(g,scale)
+    else drawBodoque(g,scale) end
+  end
+
+  for _,shot in ipairs(g.shots) do
+    local x,y=Iso.toScreen(shot.x,shot.y)
+    love.graphics.setColor(shot.enemy and .95 or 1,shot.enemy and .25 or .74,shot.enemy and .28 or .38,.36)
+    love.graphics.circle('fill',x,y-7,shot.r*1.6)
+    love.graphics.setColor(shot.enemy and .98 or 1,shot.enemy and .51 or .91,shot.enemy and .26 or .57,1)
+    love.graphics.circle('fill',x,y-7,shot.r*.72)
+  end
+  for _,fx in ipairs(g.effects) do
+    local x,y=Iso.toScreen(fx.x,fx.y)
+    love.graphics.setColor(fx.c[1],fx.c[2],fx.c[3],fx.t/fx.max*.62)
+    love.graphics.setLineWidth(3);love.graphics.circle('line',x,y,fx.size*(1-fx.t/fx.max)*1.4)
+  end
+  lg.pop()
+end
+
+function Render.drawDialogue(w,h,dialogue)
+  if not dialogue or not dialogue.active then return end
+  local lg=love.graphics
+  lg.setColor(.035,.025,.065,.7);lg.rectangle('fill',0,0,w,h)
+  local panel=Render.bodoquePanel
+  local pw=math.min(w-48,900);local ph=pw*(panel and panel:getHeight()/panel:getWidth() or .36)
+  local x,y=(w-pw)/2,h-ph-24
+  if panel then
+    lg.setColor(1,1,1,1);lg.draw(panel,x,y,0,pw/panel:getWidth(),ph/panel:getHeight())
+  else
+    lg.setColor(.07,.045,.08,.98);lg.rectangle('fill',x,y,pw,ph,9)
+    lg.setColor(.74,.47,.27,1);lg.rectangle('line',x,y,pw,ph,9)
+  end
+  if Render.bodoque then
+    local pose=dialogue.portrait=='talking' and 2 or dialogue.portrait=='surprised' and 4 or 1
+    local pwose=Render.bodoque
+    local img=pwose.image
+    local quad=pwose.quads[math.floor((pose-1)/3)+1][(pose-1)%3+1]
+    lg.setColor(1,1,1,1)
+    local portraitScale=math.min(pw*.24/512,ph*.61/512)
+    lg.draw(img,quad,x+pw*.15,y+ph*.78,0,portraitScale,portraitScale,256,466)
+  end
+  lg.setColor(1,.76,.39,1);lg.print('JUAN CARLOS BODOQUE',x+pw*.29,y+ph*.24,0,1.05,1.05)
+  lg.setColor(.96,.88,.77,1)
+  local shown=dialogue.text:sub(1,math.floor(dialogue.visible))
+  lg.printf(shown,x+pw*.29,y+ph*.43,pw*.64,'left')
+  lg.setColor(1,.78,.42,1)
+  lg.printf('E / ENTER  ·  CONTINUAR',x+pw*.29,y+ph*.78,pw*.62,'right')
+end
+
+function Render.text(x,y,text,scale,col)
+  if col then C(col) else C(colors.pale) end
+  love.graphics.print(text,x,y,0,scale or 1,scale or 1)
+end
+
 return Render
